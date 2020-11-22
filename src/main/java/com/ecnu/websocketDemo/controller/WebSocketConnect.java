@@ -1,7 +1,14 @@
 package com.ecnu.websocketDemo.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ecnu.websocketDemo.Utils.WebSocketUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
+import sun.misc.ThreadGroupUtils;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -14,12 +21,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @Auther: liaoshiyao
- * @Date: 2019/1/11 11:48
- * @Description: websocket 服务类
- */
-
-/**
  *
  * @ServerEndpoint 这个注解有什么作用？
  *
@@ -30,92 +31,86 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
-@ServerEndpoint("/websocket/{userID}")
+@ServerEndpoint("/websocket/{id}")
 public class WebSocketConnect {
 
-    /**
-     *  与某个客户端的连接对话，需要通过它来给客户端发送消息
-     */
+    /*与某个客户端的连接对话，需要通过它来给客户端发送消息*/
     private Session session;
 
-    /**
-     * 标识当前连接客户端的用户名
-     */
-    private String userID;
+    /* 标识当前连接客户端的用户名*/
+    private String id;
 
-    /**
-     *  用于存所有的连接服务的客户端，这个对象存储是安全的
-     */
-    private static ConcurrentHashMap<String, WebSocketConnect> webSocketSet = new ConcurrentHashMap<>();
+    private PlayerController controller = new PlayerController();
 
-    private static List<String> userIdForEasy = new ArrayList<>();
+    public Session getSession() {
+        return session;
+    }
 
-    private static List<String> userIdForHard = new ArrayList<>();
+    public String getId() {
+        return id;
+    }
 
     /*
-    * 玩家进入房间时，该方法响应，并将玩家 UseruserID 与 Session 加入 HashMap 中
+    * 玩家进入房间时，该方法响应，并将玩家 id 与 Session 加入 HashMap 中
     * */
     @OnOpen
-    public void OnOpen(Session session, @PathParam(value = "userID") String userID){
+    public void OnOpen(Session session, @PathParam(value = "id") String id){
+
         this.session = session;
-        this.userID = userID;
+        this.id = id;
+        // id是用来表示唯一客户端，如果需要指定发送，需要指定发送通过id来区分
+        WebSocketUtil.webSocketSet.put(id,this);
 
-        // userID是用来表示唯一客户端，如果需要指定发送，需要指定发送通过userID来区分
-        webSocketSet.put(userID,this);
-
-
-        log.info("[WebSocket] 连接成功，当前连接人数为：={}",webSocketSet.size());
-        log.info("当前在线成员有：" + webSocketSet.toString());
-    }
-
-
-    @OnClose
-    public void OnClose(){
-        webSocketSet.remove(this.userID);
-        log.info("[WebSocket] 退出成功，当前连接人数为：={}",webSocketSet.size());
+        log.info("[WebSocket] 连接成功，当前连接人数为：={}",WebSocketUtil.webSocketSet.size());
+        log.info("当前在线成员有：" + WebSocketUtil.webSocketSet.toString());
     }
 
 
     /*
-    * 在 2048 游戏中，玩家每一次进行操作都会向服务端发送信息，服务端接收之后将信息广播给其他成员
-    * 操作的类型可以是
-    * 游戏流程： 准备 开始 游戏结束
-    * 一个问题是：直接将计算好的矩阵做消息发送，还是发送操作让接收者进行匹配
-    * 游戏过程： 上下左右 移动
+    * 客户端关闭后，将该 id 从集合中移除
+    * 但不从难度队列中移除，难度队列用于判断是否正在游戏中，需要进行重连
+    * （不过在难度队列中并不代表正在游戏，是否需要维护一个游戏队列）
+    * */
+    @OnClose
+    public void OnClose(){
+        WebSocketUtil.webSocketSet.remove(this.id);
+        log.info("[WebSocket] 退出成功，当前连接人数为：={}", WebSocketUtil.webSocketSet.size());
+    }
+
+    /*
+    * 通过接受的消息的类型判断需要调用哪一个方法
+    * 0： 前端点击匹配按钮，提供用户名尝试进行匹配
+    * 1： 游戏过程中进行游戏状态的传递
+    * 2：
     * */
     @OnMessage
     public void OnMessage(String message){
+        System.out.println("message:" + message);
 
-        log.info("[WebSocket] 收到消息：{}",message);
+        JSONObject obj = JSON.parseObject(message);
+        Integer method = (Integer) obj.get("method");
 
-        GroupSending(message);
-
-    }
-
-    /**
-     * 群发
-     * @param message
-     */
-    public void GroupSending(String message){
-        for (String userID : webSocketSet.keySet()){
-            try {
-                webSocketSet.get(userID).session.getBasicRemote().sendText(message);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+        switch (method){
+            case 0:
+                controller.openConnection(JSON.toJSONString(obj));
+                break;
+            case 1:
+                if (WebSocketUtil.userIdForEasy.contains(id)){
+                    WebSocketUtil.ListGroupSending(JSON.toJSONString(obj), WebSocketUtil.userIdForEasy);
+                } else if (WebSocketUtil.userIdForHard.contains(id)) {
+                    WebSocketUtil.ListGroupSending(JSON.toJSONString(obj), WebSocketUtil.userIdForHard);
+                }
+                break;
+            case 2:
+                WebSocketUtil.GroupSending(JSON.toJSONString(obj));
+            default:
+                ;
         }
+
+        //log.info("[WebSocket] 收到消息：{}",message);
+        //GroupSending(message);
+
     }
 
-    /**
-     * 指定发送
-     * @param userID
-     * @param message
-     */
-    public void AppointSending(String userID,String message){
-        try {
-            webSocketSet.get(userID).session.getBasicRemote().sendText(message);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
+
 }

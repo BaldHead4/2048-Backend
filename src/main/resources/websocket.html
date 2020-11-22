@@ -7,88 +7,56 @@
     <script type="text/javascript" src="static/js/jquery-3.4.1.js"></script>
     <script type="text/javascript">
 
-        let user = null;
+        let userid = null;
         let webServer = null;
-        function WebSocketTest()
-        {
-            if ("WebSocket" in window)
-            {
+
+        function WebSocketTest() {
+            if ("WebSocket" in window) {
                 //alert("您的浏览器支持 WebSocket!");
 
                 // 创建一个 websocket
-                var username = document.getElementById("username").value;
-
-                var ws = new WebSocket("ws://localhost:8080/websocket/"+username);
-
-                user = username;
+                let username = document.getElementById("username").value;
+                let id = "U" + Math.random()*100000 ;
+                let ws = new WebSocket("ws://localhost:8080/websocket/"+id);
+                userid = id;
                 webServer = ws;
-                let msg = {
-                    "id": "43f28b87db693fc360b30124dca24bc11605848776071e70bfa066814327964d55dbd599334b6",
-                    "username": "王大锤",
-                    "difficulty": 1
-                }
 
-                ws.onopen = function()
-                {
+                ws.onopen = function() {
+
+                    let msg = {
+                        "id": userid,
+                        "username": username,
+                        "difficulty": 1,
+                        "method": 0
+                    }
                     console.log("onOpen: success");
-                    // Web Socket 已连接上，使用 send() 方法发送数据
-                    //ws.send(username + ": 已上线");
-                    ws.send({
-                        url: "ws://localhost:8080/player",
-                        dataType:"json",
-                        data: msg ,
-                        success:function(data){
-                            console.log("ws.send: success");
-                        },
-                        error:function(jqXHR){
-                            alert("发生错误："+ jqXHR.status);
-                        }
-                    })
-                   /* $.ajax({
-                        type:"POST",
-                        url: "http://localhost:8080/player/",
-                        dataType:"json",
-                        success:function(data){
-                            if(data.success){
-                                $("searchResult").html(data.msg);
-                            }else{
-                                $("#searchResult").html("出现错误：" + data.msg);
-                            }
-                        },
-                        error:function(jqXHR){
-                            alert("发生错误："+ jqXHR.status);
-                        }
-                    });*/
-                    //alert("数据发送中...");
+                    ws.send(JSON.stringify(msg));
                 };
 
-                ws.onmessage = function (evt)
-                {
-                    var received_msg = evt.data;
-                    var received_user = evt;
-                    console.log("onMessage: success")
-                    console.log(evt);
-                    //alert("数据已接收...");
-                    $('#frame').append("<span >" + received_msg + "</span><br/>");
+                ws.onmessage = function (evt) {
+                    let received_msg = JSON.parse(evt.data);
+                    let id = received_msg["id"];
+                    console.log("onMessage: success");
+                    $('#frame').append("<span >" + id + ": " + received_msg + "</span><br/>");
                 };
 
-                ws.onclose = function()
-                {
-                    // 关闭 websocket
-                    //alert("连接已关闭...");
-                    ws.send(username + ": 已下线");
+                ws.onclose = function() {
+                    let msg = {
+                        "method": 2,
+                        "id": userid
+                    }
+                    ws.send(msg);
                 };
-            }
-
-            else
-            {
+            } else {
                 // 浏览器不支持 WebSocket
                 alert("您的浏览器不支持 WebSocket!");
             }
         }
         function sendMessage() {
-            //var msg = $('#message').val();
+
             var msg = {
+                "method": 1,
+                "id": userid,
                 "score": 1024,
                 "blocks": [
                     {
@@ -131,9 +99,6 @@
             webServer.send(JSON.stringify(msg));
         }
 
-        function WebSocketWithdraw() {
-
-        }
     </script>
     <style>
         span {
@@ -146,9 +111,10 @@
 
 <div id="sse">
     Username: <input type="text" id="username"/><br/>
-    <a href="javascript:WebSocketTest()">加入 WebSocket</a> <a href="javascript:WebSocketWithdraw()">退出 WebSocket</a><br/><br/>
+    <a href="javascript:WebSocketTest()">加入 WebSocket</a> <!--<a href="javascript:WebSocketWithdraw()">退出 WebSocket</a><br/><br/>-->
 
-    Message：<input type="text" id="message"/><br/>
+<!--    Message：<input type="text" id="message"/><br/>-->
+    <br/>
     <button type="button" onclick="sendMessage()" value="Send">Send</button><br/>
 
     <div style="border: 1px saddlebrown" id="frame">
