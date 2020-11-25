@@ -3,6 +3,7 @@ package com.ecnu.websocketDemo.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ecnu.websocketDemo.Utils.WebSocketUtil;
+import com.ecnu.websocketDemo.entity.PlayRoom;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
@@ -40,7 +41,8 @@ public class WebSocketConnect {
     /* 标识当前连接客户端的用户名*/
     private String id;
 
-    private PlayerController controller = new PlayerController();
+    /*如果分配了房间则标定房间*/
+    private PlayRoom playRoom;
 
     public Session getSession() {
         return session;
@@ -48,6 +50,10 @@ public class WebSocketConnect {
 
     public String getId() {
         return id;
+    }
+
+    public void setPlayRoom(PlayRoom playRoom) {
+        this.playRoom = playRoom;
     }
 
     /*
@@ -90,26 +96,31 @@ public class WebSocketConnect {
         JSONObject obj = JSON.parseObject(message);
         Integer method = (Integer) obj.get("method");
 
+        List<String> list = null;
+
+        if (WebSocketUtil.easyList.contains(id)){
+            list = WebSocketUtil.easyList;
+        } else if (WebSocketUtil.hardList.contains(id)) {
+            list = WebSocketUtil.hardList;
+        }
+
         switch (method){
             case 0:
-                controller.openConnection(JSON.toJSONString(obj));
+                WebSocketUtil.openConnection(JSON.toJSONString(obj));
                 break;
             case 1:
-                if (WebSocketUtil.userIdForEasy.contains(id)){
-                    WebSocketUtil.ListGroupSending(JSON.toJSONString(obj), WebSocketUtil.userIdForEasy);
-                } else if (WebSocketUtil.userIdForHard.contains(id)) {
-                    WebSocketUtil.ListGroupSending(JSON.toJSONString(obj), WebSocketUtil.userIdForHard);
-                }
+                obj.put("sender", "system");
+                WebSocketUtil.PlayRoomGroupSending((JSON.toJSONString(obj)), playRoom);
                 break;
             case 2:
-                WebSocketUtil.GroupSending(JSON.toJSONString(obj));
+                /*掉线了*/
+                //WebSocketUtil.PlayRoomGroupSending(JSON.toJSONString(obj), playRoom);
+                break;
             default:
                 ;
         }
 
-        //log.info("[WebSocket] 收到消息：{}",message);
-        //GroupSending(message);
-
+        log.info("[WebSocket] 收到消息：{}",message);
     }
 
 
