@@ -62,13 +62,12 @@
             ws.onmessage = function (evt) {
                 let received_msg = JSON.parse(evt.data);
                 let sender = received_msg["sender"];
-                let id = received_msg["id"];
-                let msg = null
+                let msg = null;
 
                 if (sender === "system"){
                     msg = "系统提示： " + received_msg["message"];
                 } else if (sender === "player"){
-                    msg = id + ": " + received_msg;
+                    msg = received_msg["id"] + ": " + received_msg;
                 }
 
                 $('#frame').append("<span >" + msg + "</span><br/>");

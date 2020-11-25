@@ -2,6 +2,7 @@ package com.ecnu.websocketDemo.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.ecnu.websocketDemo.Utils.JSONUtil;
 import com.ecnu.websocketDemo.Utils.WebSocketUtil;
 import com.ecnu.websocketDemo.entity.PlayRoom;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,10 @@ public class WebSocketConnect {
         this.playRoom = playRoom;
     }
 
+    public PlayRoom getPlayRoom() {
+        return playRoom;
+    }
+
     /*
     * 玩家进入房间时，该方法响应，并将玩家 id 与 Session 加入 HashMap 中
     * */
@@ -74,12 +79,16 @@ public class WebSocketConnect {
 
     /*
     * 客户端关闭后，将该 id 从集合中移除
-    * 但不从难度队列中移除，难度队列用于判断是否正在游戏中，需要进行重连
-    * （不过在难度队列中并不代表正在游戏，是否需要维护一个游戏队列）
+    * 如果玩家掉线，则向房间里的其他玩家广播该玩家掉线信息
     * */
     @OnClose
     public void OnClose(){
+        System.out.println(this.playRoom);
         WebSocketUtil.webSocketSet.remove(this.id);
+        /*掉线了*/
+        String msg = JSONUtil.buildTextJSONObject("玩家 "+ this.id +" 掉线了").toJSONString();
+        WebSocketUtil.playRoomGroupSending(msg, this.playRoom);
+
         log.info("[WebSocket] 退出成功，当前连接人数为：={}", WebSocketUtil.webSocketSet.size());
     }
 
@@ -91,30 +100,20 @@ public class WebSocketConnect {
     * */
     @OnMessage
     public void OnMessage(String message){
-        System.out.println("message:" + message);
 
         JSONObject obj = JSON.parseObject(message);
         Integer method = (Integer) obj.get("method");
-
-        List<String> list = null;
-
-        if (WebSocketUtil.easyList.contains(id)){
-            list = WebSocketUtil.easyList;
-        } else if (WebSocketUtil.hardList.contains(id)) {
-            list = WebSocketUtil.hardList;
-        }
 
         switch (method){
             case 0:
                 WebSocketUtil.openConnection(JSON.toJSONString(obj));
                 break;
             case 1:
-                obj.put("sender", "system");
-                WebSocketUtil.PlayRoomGroupSending((JSON.toJSONString(obj)), playRoom);
+                obj.put("sender", "player");
+                WebSocketUtil.playRoomGroupSending((JSON.toJSONString(obj)), playRoom);
                 break;
             case 2:
-                /*掉线了*/
-                //WebSocketUtil.PlayRoomGroupSending(JSON.toJSONString(obj), playRoom);
+
                 break;
             default:
                 ;
