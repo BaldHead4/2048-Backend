@@ -83,12 +83,12 @@ public class WebSocketConnect {
     * */
     @OnClose
     public void OnClose(){
-        System.out.println(this.playRoom);
         WebSocketUtil.webSocketSet.remove(this.id);
         /*掉线了*/
-        String msg = JSONUtil.buildTextJSONObject("玩家 "+ this.id +" 掉线了").toJSONString();
-        WebSocketUtil.playRoomGroupSending(msg, this.playRoom);
-
+        if (this.playRoom != null) {
+            String msg = JSONUtil.buildTextJSONObject("玩家 " + this.id + " 掉线了").toJSONString();
+            WebSocketUtil.playRoomGroupSending(msg, this.playRoom);
+        }
         log.info("[WebSocket] 退出成功，当前连接人数为：={}", WebSocketUtil.webSocketSet.size());
     }
 
@@ -109,8 +109,14 @@ public class WebSocketConnect {
                 WebSocketUtil.openConnection(JSON.toJSONString(obj));
                 break;
             case 1:
-                obj.put("sender", "player");
-                WebSocketUtil.playRoomGroupSending((JSON.toJSONString(obj)), playRoom);
+                if (this.playRoom != null) {
+                    /*将该 player 对局信息存储到相应 playroom 中*/
+                    String id = (String) obj.get("id");
+                    this.playRoom.getGameMessage().put(id, message);
+                    /*广播该 player 对局信息*/
+                    obj.put("sender", "player");
+                    WebSocketUtil.playRoomGroupSending((JSON.toJSONString(obj)), this.playRoom);
+                }
                 break;
             case 2:
 

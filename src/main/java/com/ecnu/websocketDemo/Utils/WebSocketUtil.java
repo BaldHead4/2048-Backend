@@ -7,6 +7,7 @@ import com.ecnu.websocketDemo.entity.PlayRoom;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketUtil {
@@ -26,45 +27,6 @@ public class WebSocketUtil {
     public static final Integer MAX_PLAYER = 2 ;
 
     /**
-     * 群发
-     * @param message
-     */
-    /*public static void GroupSending(String message){
-
-        JSONObject jsonObject = JSON.parseObject(message);
-        jsonObject.put("sender", "success");
-        message = JSON.toJSONString(jsonObject);
-
-        for (String id : webSocketSet.keySet()){
-            try {
-                webSocketSet.get(id).getSession().getBasicRemote().sendText(message);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-    }*/
-
-    /**
-     * 难度队列群发
-     * 将消息发送给相应难度队列的成员
-     * @param message
-     */
-    /*public static void ListGroupSending(String message, List<String> list){
-
-        JSONObject jsonObject = JSON.parseObject(message);
-        jsonObject.put("sender", "success");
-        message = JSON.toJSONString(jsonObject);
-
-        for (String id : list){
-            try {
-                webSocketSet.get(id).getSession().getBasicRemote().sendText(message);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-    }*/
-
-    /**
      * 难度队列群发
      * 将消息发送给相应房间的成员
      * @param message
@@ -75,6 +37,7 @@ public class WebSocketUtil {
                 if (webSocketSet.get(id)!=null) {
                     webSocketSet.get(id).getSession().getBasicRemote().sendText(message);
                 }
+
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -163,13 +126,18 @@ public class WebSocketUtil {
     }
 
     /*该重连方法将游戏房间对局信息发送给该 player
-    * 问题一、需要保存的对局信息的格式
+    * 保存的对局信息的格式为 JSONString 字符串
     * */
     private static void reconnect(String id, PlayRoom playRoom) {
         String msg = JSONUtil.buildTextJSONObject("玩家 "+ id +" 正在重连").toJSONString();
         WebSocketUtil.playRoomGroupSending(msg, playRoom);
+
+        Map<String, String> gameMessage = playRoom.getGameMessage();
+        JSONObject jsonObject = new JSONObject();
+        for (String playerId : playRoom.getPlayers()) {
+            jsonObject.put(playerId, gameMessage.get(playerId));
+        }
+        WebSocketUtil.AppointSending(id, jsonObject.toJSONString());
         webSocketSet.get(id).setPlayRoom(playRoom);
     }
-
-
 }

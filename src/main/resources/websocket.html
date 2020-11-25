@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>websocket 客户端</title>
 
-    <script type="text/javascript" src="static/js/jquery-3.4.1.js"></script>
+    <script type="text/javascript" src="js/jquery-3.4.1.js"></script>
     <style>
         span {
             border: 1px antiquewhite;
@@ -38,13 +38,14 @@
 
             // 创建一个 websocket
             let username = document.getElementById("username").value;
+
             let id = ("U" + Math.random()*100000).substring(0, 6);
-            let ws = new WebSocket("ws://localhost:8080/websocket/"+id);
-            userid = id;
+            userid = "U18310";
+
+            let ws = new WebSocket("ws://localhost:8080/websocket/" + userid);
             webServer = ws;
 
             ws.onopen = function() {
-
                 let msg = {
                     "id": userid,
                     "username": username,
@@ -67,18 +68,17 @@
                 if (sender === "system"){
                     msg = "系统提示： " + received_msg["message"];
                 } else if (sender === "player"){
-                    msg = received_msg["id"] + ": " + received_msg;
+                    msg = received_msg["id"] + ": " + JSON.stringify(evt.data);
+                } else {
+                    msg = "重连的对局玩家信息：" + evt.data;
                 }
 
                 $('#frame').append("<span >" + msg + "</span><br/>");
             };
 
             ws.onclose = function() {
-                let msg = {
-                    "method": 2,
-                    "id": userid
-                }
-                ws.send(msg);
+                let msg = "服务器异常关闭";
+                $('#frame').append("<span >" + msg + "</span><br/>");
             };
         } else {
             // 浏览器不支持 WebSocket

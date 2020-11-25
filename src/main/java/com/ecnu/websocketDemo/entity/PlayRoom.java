@@ -1,11 +1,10 @@
 package com.ecnu.websocketDemo.entity;
 
+import com.ecnu.websocketDemo.Utils.GameTask;
+import com.ecnu.websocketDemo.Utils.JSONUtil;
 import com.ecnu.websocketDemo.Utils.WebSocketUtil;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class PlayRoom {
     private String prId;
@@ -14,13 +13,22 @@ public class PlayRoom {
     private List<String> players;
     private Integer difficulty;
 
-    //可能需要存储游戏信息
+    //存储局内状态，用于重连时向客户端发送当前对局状态
+    private Map<String, String> gameMessage = new HashMap<>();
 
     public PlayRoom(List<String> players, Integer difficulty) {
         this.players = players;
         this.difficulty = difficulty;
         this.startTime = System.currentTimeMillis();
-        prId = "PR" + UUID.randomUUID().toString().substring(0, 5);
+        this.prId = "PR" + UUID.randomUUID().toString().substring(0, 5);
+
+        //新建房间时表示游戏开始，加上计时器
+        Timer timer= new Timer();
+        timer.schedule(new GameTask(this), 100000);
+    }
+
+    public Map<String, String> getGameMessage() {
+        return gameMessage;
     }
 
     public Integer getDifficulty() {
