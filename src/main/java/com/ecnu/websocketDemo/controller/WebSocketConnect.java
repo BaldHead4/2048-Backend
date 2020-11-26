@@ -85,6 +85,8 @@ public class WebSocketConnect {
     public void OnClose(){
         WebSocketUtil.webSocketSet.remove(this.id);
         /*掉线了*/
+        WebSocketUtil.easyList.remove(this.id);
+        WebSocketUtil.hardList.remove(this.id);
         if (this.playRoom != null) {
             String msg = JSONUtil.buildTextJSONObject("玩家 " + this.id + " 掉线了").toJSONString();
             WebSocketUtil.playRoomGroupSending(msg, this.playRoom);

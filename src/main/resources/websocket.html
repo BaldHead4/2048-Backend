@@ -40,9 +40,10 @@
             let username = document.getElementById("username").value;
 
             let id = ("U" + Math.random()*100000).substring(0, 6);
-            userid = "U18310";
+            userid = id;
 
-            let ws = new WebSocket("ws://localhost:8080/websocket/" + userid);
+            //let ws = new WebSocket("ws://47.96.68.168:8080/websocket/" + userid);
+            let ws = new WebSocket("ws://47.96.68.168:8080/websocket/" + userid);
             webServer = ws;
 
             ws.onopen = function() {

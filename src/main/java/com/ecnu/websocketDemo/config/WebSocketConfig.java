@@ -1,13 +1,9 @@
 package com.ecnu.websocketDemo.config;
 
-import com.ecnu.websocketDemo.controller.PlayerController;
 import org.springframework.context.annotation.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
-import sun.text.UCompactIntArray;
-
-import javax.swing.*;
 
 @Component
 @EnableWebSocket

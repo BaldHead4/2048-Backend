@@ -100,7 +100,9 @@ public class WebSocketUtil {
                             PlayRoom playRoom = new PlayRoom(new ArrayList<>(easyList), difficulty);
                             playRoomList.add(playRoom);
                             for (String player : easyList) {
-                                webSocketSet.get(player).setPlayRoom(playRoom);
+                                if(webSocketSet.contains(player)) {
+                                    webSocketSet.get(player).setPlayRoom(playRoom);
+                                }
                             }
                             playRoomGroupSending(JSONUtil.buildTextJSONObject( "加入了简单房间 " + playRoom.getPrId()).toJSONString() ,playRoom);
                             easyList.clear();
