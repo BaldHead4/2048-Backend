@@ -70,10 +70,12 @@ public class WebSocketConnect {
         this.session = session;
         this.id = id;
         // id是用来表示唯一客户端，如果需要指定发送，需要指定发送通过id来区分
-        WebSocketUtil.webSocketSet.put(id,this);
+        WebSocketUtil.webSocketSet.put(id, this);
 
         log.info("[WebSocket] 连接成功，当前连接人数为：={}",WebSocketUtil.webSocketSet.size());
         log.info("当前在线成员有：" + WebSocketUtil.webSocketSet.toString());
+
+
     }
 
 
@@ -111,17 +113,17 @@ public class WebSocketConnect {
                 WebSocketUtil.openConnection(JSON.toJSONString(obj));
                 break;
             case 1:
+                System.out.println("playroom: " + this.playRoom);
                 if (this.playRoom != null) {
+                    System.out.println("onMessage before groupSending: success");
                     /*将该 player 对局信息存储到相应 playroom 中*/
                     String id = (String) obj.get("id");
                     this.playRoom.getGameMessage().put(id, message);
                     /*广播该 player 对局信息*/
-                    obj.put("sender", "player");
+                    obj.put("type", 1);
                     WebSocketUtil.playRoomGroupSending((JSON.toJSONString(obj)), this.playRoom);
+                    System.out.println("onMessage groupSending: success");
                 }
-                break;
-            case 2:
-
                 break;
             default:
                 ;

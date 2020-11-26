@@ -100,7 +100,7 @@ public class WebSocketUtil {
                             PlayRoom playRoom = new PlayRoom(new ArrayList<>(easyList), difficulty);
                             playRoomList.add(playRoom);
                             for (String player : easyList) {
-                                if(webSocketSet.contains(player)) {
+                                if(webSocketSet.containsKey(player)) {
                                     webSocketSet.get(player).setPlayRoom(playRoom);
                                 }
                             }
@@ -116,7 +116,11 @@ public class WebSocketUtil {
                         if (hardList.size() == MAX_PLAYER) {
                             PlayRoom playRoom = new PlayRoom(new ArrayList<>(hardList), difficulty);
                             playRoomList.add(playRoom);
-                            webSocketSet.get(id).setPlayRoom(playRoom);
+                            for (String player : hardList) {
+                                if(webSocketSet.containsKey(player)) {
+                                    webSocketSet.get(player).setPlayRoom(playRoom);
+                                }
+                            }
                             playRoomGroupSending(JSONUtil.buildTextJSONObject("加入了困难房间 " + playRoom.getPrId()).toJSONString() ,playRoom);
                             hardList.clear();
                         }
@@ -134,12 +138,7 @@ public class WebSocketUtil {
         String msg = JSONUtil.buildTextJSONObject("玩家 "+ id +" 正在重连").toJSONString();
         WebSocketUtil.playRoomGroupSending(msg, playRoom);
 
-        Map<String, String> gameMessage = playRoom.getGameMessage();
-        JSONObject jsonObject = new JSONObject();
-        for (String playerId : playRoom.getPlayers()) {
-            jsonObject.put(playerId, gameMessage.get(playerId));
-        }
-        WebSocketUtil.AppointSending(id, jsonObject.toJSONString());
+        WebSocketUtil.AppointSending(id, JSONUtil.buildReConnectJSONObject(playRoom).toJSONString());
         webSocketSet.get(id).setPlayRoom(playRoom);
     }
 }

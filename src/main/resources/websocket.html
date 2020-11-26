@@ -39,11 +39,11 @@
             // 创建一个 websocket
             let username = document.getElementById("username").value;
 
-            let id = ("U" + Math.random()*100000).substring(0, 6);
-            userid = id;
+            let id = ("U" + Math.random()*10000000).substring(0, 6);
+            userid = "U73453";
 
+            let ws = new WebSocket("ws://localhost:8080/websocket/" + userid);
             //let ws = new WebSocket("ws://47.96.68.168:8080/websocket/" + userid);
-            let ws = new WebSocket("ws://47.96.68.168:8080/websocket/" + userid);
             webServer = ws;
 
             ws.onopen = function() {
@@ -63,14 +63,20 @@
             //
             ws.onmessage = function (evt) {
                 let received_msg = JSON.parse(evt.data);
-                let sender = received_msg["sender"];
+
+                let type = received_msg["type"];
+
+                console.log(type);
+
                 let msg = null;
 
-                if (sender === "system"){
+                if (type === 0){
                     msg = "系统提示： " + received_msg["message"];
-                } else if (sender === "player"){
+                } else if (type === 1){
                     msg = received_msg["id"] + ": " + JSON.stringify(evt.data);
-                } else {
+                } else if (type === 2) {
+                    msg = received_msg["message"];
+                } else if (type === 3){
                     msg = "重连的对局玩家信息：" + evt.data;
                 }
 
