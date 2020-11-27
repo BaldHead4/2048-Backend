@@ -21,6 +21,7 @@
         <!--    Message：<input type="text" id="message"/><br/>-->
         <br/>
         <button type="button" onclick="sendMessage()" value="Send">Send</button><br/>
+        <button type="button" onclick="gameOver()" value="gameOver">GameOver</button><br/>
 
         <div style="border: 1px saddlebrown" id="frame">
 
@@ -68,16 +69,43 @@
 
                 console.log(type);
 
+                console.log(evt);
+
                 let msg = null;
 
-                if (type === 0){
-                    msg = "系统提示： " + received_msg["message"];
-                } else if (type === 1){
-                    msg = received_msg["id"] + ": " + JSON.stringify(evt.data);
-                } else if (type === 2) {
-                    msg = received_msg["message"];
-                } else if (type === 3){
-                    msg = "重连的对局玩家信息：" + evt.data;
+                switch (type) {
+                    case 0://
+                        msg = "开始时对局玩家信息：" + evt.data;
+                        break;
+                    case 1://
+                        msg = received_msg["id"] + ": " + evt.data;
+                        break;
+                    case 2://
+                        msg = "系统提示： " + received_msg["message"];
+                        break;
+                    case 3://
+                        msg = "重连的对局玩家信息：" + evt.data;
+                        break;
+                    case 4://
+                        msg = "系统提示： " + received_msg["message"];
+                        break;
+                    case 5://
+                        msg = "系统提示： " + received_msg["message"];
+                        break;
+                    case 6://
+                        msg = "系统提示： " + received_msg["message"];
+                        break;
+                    case 7://
+                        msg = "系统提示： " + received_msg["message"];
+                        break;
+                    case 8:
+                        msg = "系统提示： " + received_msg["message"];
+                        break;
+                    case 9:
+                        msg = "系统提示： " + received_msg["message"];
+                        break;
+                    default:
+
                 }
 
                 $('#frame').append("<span >" + msg + "</span><br/>");
@@ -92,6 +120,15 @@
             alert("您的浏览器不支持 WebSocket!");
         }
     }
+
+    function gameOver() {
+        let msg = {
+            "method": 2
+        }
+        webServer.send(JSON.stringify(msg));
+
+    }
+
     function sendMessage() {
 
         var msg = {

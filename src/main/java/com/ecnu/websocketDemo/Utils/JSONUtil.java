@@ -5,16 +5,29 @@ import com.alibaba.fastjson.JSONAware;
 import com.alibaba.fastjson.JSONObject;
 import com.ecnu.websocketDemo.entity.PlayRoom;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class JSONUtil {
 
-    //封装文字信息的 JSON 对象
-    public static JSONObject buildErrorJSONObject(String message) {
+    //封装游戏开始时发送房间里其他玩家的用户名和 id 信息的 JSON 对象
+    public static JSONObject buildOtherPlayerMsgJSONObject(PlayRoom playRoom) {
         JSONObject textMsg = new JSONObject();
-        textMsg.put("message", message);
+        List<String> players = playRoom.getPlayers();
+        List<JSONObject> jsonObjects = new ArrayList<>();
+        textMsg.put("playerList", players);
+        for (String player : players) {
+            JSONObject jsonObject = new JSONObject();
+            if (WebSocketUtil.webSocketSet.containsKey(player)){
+                jsonObject.put("id", player);
+                jsonObject.put("username", WebSocketUtil.webSocketSet.get(player).getUsername());
+            }
+            jsonObjects.add(jsonObject);
+        }
+        textMsg.put("playerList", jsonObjects);
         textMsg.put("type", 0);
+        System.out.println(textMsg.toJSONString());
         return textMsg;
     }
 
@@ -72,8 +85,6 @@ public class JSONUtil {
         return textMsg;
     }
 
-
-
     //封装由于所有玩家游戏结束而导致游戏提前结束信息的 JSON 对象
     public static JSONObject buildGameOverJSONObject(String message) {
         JSONObject textMsg = new JSONObject();
@@ -82,17 +93,10 @@ public class JSONUtil {
         return textMsg;
     }
 
-    //封装游戏开始时发送房间里其他玩家的用户名和 id 信息的 JSON 对象
-    public static JSONObject buildOtherPlayerMsgJSONObject(PlayRoom playRoom) {
+    //封装错误信息的 JSON 对象
+    public static JSONObject buildErrorJSONObject(String message) {
         JSONObject textMsg = new JSONObject();
-        List<String> players = playRoom.getPlayers();
-        textMsg.put("playerList", players);
-        for (String player : players) {
-            if (WebSocketUtil.webSocketSet.containsKey(player)){
-                textMsg.put(player, WebSocketUtil.webSocketSet.get(player));
-            }
-        }
-
+        textMsg.put("message", message);
         textMsg.put("type", 9);
         return textMsg;
     }

@@ -133,14 +133,16 @@ public class WebSocketConnect {
                 }
                 break;
             case 2:
-                List<String> failList = this.playRoom.getFailList();
-                if (this.playRoom != null && !failList.contains(this.id)) {
-                    failList.add(this.id);
-                }
-                /**/
-                if (failList.size() >= this.playRoom.getPlayers().size()) {
-                    WebSocketUtil.playRoomGroupSending(JSONUtil.buildGameOverJSONObject("所有玩家游戏结束，该局游戏结束")
-                            .toJSONString(),this.playRoom);
+                if (this.playRoom != null) {
+                    List<String> failList = this.playRoom.getFailList();
+                    if (this.playRoom != null && !failList.contains(this.id)) {
+                        failList.add(this.id);
+                    }
+                    if (failList.size() >= this.playRoom.getPlayers().size()) {
+                        WebSocketUtil.playRoomGroupSending(JSONUtil.buildGameOverJSONObject("所有玩家游戏结束，该局游戏结束")
+                                .toJSONString(), this.playRoom);
+                        this.playRoom.gameOver();
+                    }
                 }
                 break;
             default:

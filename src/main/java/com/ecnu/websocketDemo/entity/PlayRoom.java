@@ -3,6 +3,7 @@ package com.ecnu.websocketDemo.entity;
 import com.ecnu.websocketDemo.Utils.GameTask;
 import com.ecnu.websocketDemo.Utils.JSONUtil;
 import com.ecnu.websocketDemo.Utils.WebSocketUtil;
+import com.ecnu.websocketDemo.controller.WebSocketConnect;
 
 import java.util.*;
 
@@ -79,5 +80,18 @@ public class PlayRoom {
                 ", players=" + players +
                 ", difficulty=" + difficulty +
                 '}';
+    }
+
+    public void gameOver() {
+        WebSocketUtil.playRoomGroupSending(JSONUtil.buildQuitJSONObject("已退出房间 " + this.prId + "，请重新匹配")
+                .toJSONString(), this);
+        WebSocketUtil.playRoomList.remove(this);
+        for (String playerId : this.players) {
+            /*如果房间中的玩家没有掉线，则将该玩家的关联的游戏房间置为 null */
+            WebSocketConnect connect = WebSocketUtil.webSocketSet.get(playerId);
+            if (connect != null) {
+                connect.setPlayRoom(null);
+            }
+        }
     }
 }

@@ -37,7 +37,6 @@ public class WebSocketUtil {
                 if (webSocketSet.get(id)!=null) {
                     webSocketSet.get(id).getSession().getBasicRemote().sendText(message);
                 }
-
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -53,7 +52,9 @@ public class WebSocketUtil {
      */
     public static void AppointSending(String id, String message){
         try {
-            webSocketSet.get(id).getSession().getBasicRemote().sendText(message);
+            if (webSocketSet.get(id) != null) {
+                webSocketSet.get(id).getSession().getBasicRemote().sendText(message);
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -106,6 +107,7 @@ public class WebSocketUtil {
                                 }
                             }
                             playRoomGroupSending(JSONUtil.buildJoinPlayRoomJSONObject( "加入了简单房间 " + playRoom.getPrId()).toJSONString() ,playRoom);
+                            playRoomGroupSending(JSONUtil.buildOtherPlayerMsgJSONObject(playRoom).toJSONString(), playRoom);
                             easyList.clear();
                         }
                     }
