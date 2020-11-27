@@ -1,23 +1,22 @@
 package com.ecnu.websocketDemo.Utils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONAware;
 import com.alibaba.fastjson.JSONObject;
 import com.ecnu.websocketDemo.entity.PlayRoom;
 
+import java.util.List;
 import java.util.Map;
 
 public class JSONUtil {
 
     //封装文字信息的 JSON 对象
-    public static JSONObject buildTextJSONObject(String message) {
+    public static JSONObject buildErrorJSONObject(String message) {
         JSONObject textMsg = new JSONObject();
-
         textMsg.put("message", message);
         textMsg.put("type", 0);
         return textMsg;
     }
-
-
 
     /*封装时间到的 JSON 对象*/
     public static JSONObject buildTimeOutJSONObject(String message) {
@@ -27,14 +26,74 @@ public class JSONUtil {
         return textMsg;
     }
 
-    /*封装重连时的发送的游戏对局状态 JSON 对象*/
+    /*封装重连时的发送的游戏对局状态 JSON 对象
+    * 返回该局的玩家以及其游戏状态
+    * */
     public static JSONObject buildReConnectJSONObject(PlayRoom playRoom) {
         Map<String, String> gameMessage = playRoom.getGameMessage();
         JSONObject jsonObject = new JSONObject();
         for (String playerId : playRoom.getPlayers()) {
             jsonObject.put(playerId, gameMessage.get(playerId));
         }
+        jsonObject.put("failList", playRoom.getFailList());
         jsonObject.put("type", 3);
         return jsonObject;
+    }
+
+    //封装发送给其他玩家某个玩家正在重连接的消息的 JSON 对象
+    public static JSONObject buildReConnectingJSONObject(String message) {
+        JSONObject textMsg = new JSONObject();
+        textMsg.put("message", message);
+        textMsg.put("type", 4);
+        return textMsg;
+    }
+
+    //封装掉线的信息 JSON 对象
+    public static JSONObject buildLostConnectJSONObject(String message) {
+        JSONObject textMsg = new JSONObject();
+        textMsg.put("message", message);
+        textMsg.put("type", 5);
+        return textMsg;
+    }
+
+    //封装加入房间的信息 JSON 对象
+    public static JSONObject buildJoinPlayRoomJSONObject(String message) {
+        JSONObject textMsg = new JSONObject();
+        textMsg.put("message", message);
+        textMsg.put("type", 6);
+        return textMsg;
+    }
+
+    //封装退出房间的信息 JSON 对象
+    public static JSONObject buildQuitJSONObject(String message) {
+        JSONObject textMsg = new JSONObject();
+        textMsg.put("message", message);
+        textMsg.put("type", 7);
+        return textMsg;
+    }
+
+
+
+    //封装由于所有玩家游戏结束而导致游戏提前结束信息的 JSON 对象
+    public static JSONObject buildGameOverJSONObject(String message) {
+        JSONObject textMsg = new JSONObject();
+        textMsg.put("message", message);
+        textMsg.put("type", 8);
+        return textMsg;
+    }
+
+    //封装游戏开始时发送房间里其他玩家的用户名和 id 信息的 JSON 对象
+    public static JSONObject buildOtherPlayerMsgJSONObject(PlayRoom playRoom) {
+        JSONObject textMsg = new JSONObject();
+        List<String> players = playRoom.getPlayers();
+        textMsg.put("playerList", players);
+        for (String player : players) {
+            if (WebSocketUtil.webSocketSet.containsKey(player)){
+                textMsg.put(player, WebSocketUtil.webSocketSet.get(player));
+            }
+        }
+
+        textMsg.put("type", 9);
+        return textMsg;
     }
 }

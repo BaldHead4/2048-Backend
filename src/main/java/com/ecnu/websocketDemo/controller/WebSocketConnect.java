@@ -39,11 +39,22 @@ public class WebSocketConnect {
     /*与某个客户端的连接对话，需要通过它来给客户端发送消息*/
     private Session session;
 
-    /* 标识当前连接客户端的用户名*/
+    /* 标识当前连接客户端的 id*/
     private String id;
+
+    /* 标识当前客户端的用户名*/
+    private String username;
 
     /*如果分配了房间则标定房间*/
     private PlayRoom playRoom;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public Session getSession() {
         return session;
@@ -90,7 +101,7 @@ public class WebSocketConnect {
         WebSocketUtil.easyList.remove(this.id);
         WebSocketUtil.hardList.remove(this.id);
         if (this.playRoom != null) {
-            String msg = JSONUtil.buildTextJSONObject("玩家 " + this.id + " 掉线了").toJSONString();
+            String msg = JSONUtil.buildLostConnectJSONObject("玩家 " + this.id + " 掉线了").toJSONString();
             WebSocketUtil.playRoomGroupSending(msg, this.playRoom);
         }
         log.info("[WebSocket] 退出成功，当前连接人数为：={}", WebSocketUtil.webSocketSet.size());
@@ -100,7 +111,7 @@ public class WebSocketConnect {
     * 通过接受的消息的类型判断需要调用哪一个方法
     * 0： 前端点击匹配按钮，提供用户名尝试进行匹配
     * 1： 游戏过程中进行游戏状态的传递
-    * 2：
+    * 2： 游戏中某个玩家游戏结束信息
     * */
     @OnMessage
     public void OnMessage(String message){
@@ -113,16 +124,23 @@ public class WebSocketConnect {
                 WebSocketUtil.openConnection(JSON.toJSONString(obj));
                 break;
             case 1:
-                System.out.println("playroom: " + this.playRoom);
                 if (this.playRoom != null) {
-                    System.out.println("onMessage before groupSending: success");
                     /*将该 player 对局信息存储到相应 playroom 中*/
-                    String id = (String) obj.get("id");
-                    this.playRoom.getGameMessage().put(id, message);
+                    this.playRoom.getGameMessage().put(this.id, message);
                     /*广播该 player 对局信息*/
                     obj.put("type", 1);
                     WebSocketUtil.playRoomGroupSending((JSON.toJSONString(obj)), this.playRoom);
-                    System.out.println("onMessage groupSending: success");
+                }
+                break;
+            case 2:
+                List<String> failList = this.playRoom.getFailList();
+                if (this.playRoom != null && !failList.contains(this.id)) {
+                    failList.add(this.id);
+                }
+                /**/
+                if (failList.size() >= this.playRoom.getPlayers().size()) {
+                    WebSocketUtil.playRoomGroupSending(JSONUtil.buildGameOverJSONObject("所有玩家游戏结束，该局游戏结束")
+                            .toJSONString(),this.playRoom);
                 }
                 break;
             default:

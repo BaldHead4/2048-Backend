@@ -24,7 +24,7 @@ public class WebSocketUtil {
     public static List<PlayRoom> playRoomList = new ArrayList<>();
 
     /*最大对局人数*/
-    public static final Integer MAX_PLAYER = 2 ;
+    public static final Integer MAX_PLAYER = 4 ;
 
     /**
      * 难度队列群发
@@ -73,9 +73,10 @@ public class WebSocketUtil {
         String username = (String) jsonObject.get("username");
         WebSocketConnect connect = webSocketSet.get(id);
 
-        if (webSocketSet.get(id) != null) {
+        if (connect != null) {
             boolean isPlayer = false;
             PlayRoom playRoomToConnect = null;
+            connect.setUsername(username);
             for (PlayRoom playRoom : playRoomList) {
                 if (playRoom.getPlayers().contains(id)) {
                     isPlayer = true;
@@ -93,7 +94,7 @@ public class WebSocketUtil {
                 //还未加入等待队列则加入等待队列，
                 if (difficulty == 1 ) {
                     if (easyList.size() >= MAX_PLAYER) {
-                        AppointSending(id, JSONUtil.buildTextJSONObject( "房间已满，请重新匹配或重新选择难度").toJSONString());
+                        AppointSending(id, JSONUtil.buildErrorJSONObject( "房间已满，请重新匹配或重新选择难度").toJSONString());
                     } else {
                         easyList.add(id);
                         if (easyList.size() == MAX_PLAYER) {
@@ -104,13 +105,13 @@ public class WebSocketUtil {
                                     webSocketSet.get(player).setPlayRoom(playRoom);
                                 }
                             }
-                            playRoomGroupSending(JSONUtil.buildTextJSONObject( "加入了简单房间 " + playRoom.getPrId()).toJSONString() ,playRoom);
+                            playRoomGroupSending(JSONUtil.buildJoinPlayRoomJSONObject( "加入了简单房间 " + playRoom.getPrId()).toJSONString() ,playRoom);
                             easyList.clear();
                         }
                     }
                 }else if (difficulty == 2){
                     if (hardList.size() >= MAX_PLAYER) {
-                        AppointSending(id, JSONUtil.buildTextJSONObject( "房间已满，请重新匹配或重新选择难度").toJSONString());
+                        AppointSending(id, JSONUtil.buildErrorJSONObject( "房间已满，请重新匹配或重新选择难度").toJSONString());
                     } else {
                         hardList.add(id);
                         if (hardList.size() == MAX_PLAYER) {
@@ -121,7 +122,8 @@ public class WebSocketUtil {
                                     webSocketSet.get(player).setPlayRoom(playRoom);
                                 }
                             }
-                            playRoomGroupSending(JSONUtil.buildTextJSONObject("加入了困难房间 " + playRoom.getPrId()).toJSONString() ,playRoom);
+                            playRoomGroupSending(JSONUtil.buildJoinPlayRoomJSONObject("加入了困难房间 " + playRoom.getPrId()).toJSONString() ,playRoom);
+                            playRoomGroupSending(JSONUtil.buildOtherPlayerMsgJSONObject(playRoom).toJSONString(), playRoom);
                             hardList.clear();
                         }
                     }
@@ -135,9 +137,8 @@ public class WebSocketUtil {
     * 保存的对局信息的格式为 JSONString 字符串
     * */
     private static void reconnect(String id, PlayRoom playRoom) {
-        String msg = JSONUtil.buildTextJSONObject("玩家 "+ id +" 正在重连").toJSONString();
-        WebSocketUtil.playRoomGroupSending(msg, playRoom);
-
+        WebSocketUtil.playRoomGroupSending(JSONUtil.buildReConnectingJSONObject("玩家 "+ id +" 正在重连")
+                .toJSONString(), playRoom);
         WebSocketUtil.AppointSending(id, JSONUtil.buildReConnectJSONObject(playRoom).toJSONString());
         webSocketSet.get(id).setPlayRoom(playRoom);
     }

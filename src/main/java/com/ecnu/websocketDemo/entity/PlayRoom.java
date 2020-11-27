@@ -16,6 +16,10 @@ public class PlayRoom {
     //存储局内状态，用于重连时向客户端发送当前对局状态
     private Map<String, String> gameMessage = new HashMap<>();
 
+    //存储游戏结束的玩家 id，用于当所有玩家结束时使游戏提前结束
+    private List<String> failList = new ArrayList<>();
+
+    //初始化游戏房间
     public PlayRoom(List<String> players, Integer difficulty) {
         this.players = players;
         this.difficulty = difficulty;
@@ -24,7 +28,11 @@ public class PlayRoom {
 
         //新建房间时表示游戏开始，加上计时器
         Timer timer= new Timer();
-        timer.schedule(new GameTask(this), 100000);
+        timer.schedule(new GameTask(this), 300000);
+    }
+
+    public List<String> getFailList() {
+        return failList;
     }
 
     public Map<String, String> getGameMessage() {

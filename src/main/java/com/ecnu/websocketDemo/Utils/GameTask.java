@@ -19,7 +19,8 @@ public class GameTask extends TimerTask {
     public void run() {
         /*游戏结束时，向房间内玩家广播游戏结束，并将该房间从 playRoomList 中移除，将房间中玩家关联的游戏房间设为 null */
         WebSocketUtil.playRoomGroupSending(JSONUtil.buildTimeOutJSONObject("时间到，游戏结束").toJSONString(), this.playRoom);
-        WebSocketUtil.playRoomGroupSending(JSONUtil.buildTextJSONObject("已退出房间 " + playRoom.getPrId() + "，请重新匹配").toJSONString(), this.playRoom);
+        WebSocketUtil.playRoomGroupSending(JSONUtil.buildQuitJSONObject("已退出房间 " + playRoom.getPrId() + "，请重新匹配")
+                .toJSONString(), this.playRoom);
         WebSocketUtil.playRoomList.remove(this.playRoom);
         for (String playerId : this.playRoom.getPlayers()) {
             /*如果房间中的玩家没有掉线，则将该玩家的关联的游戏房间置为 null */
