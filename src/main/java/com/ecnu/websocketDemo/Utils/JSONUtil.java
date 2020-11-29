@@ -19,10 +19,8 @@ public class JSONUtil {
         textMsg.put("playerList", players);
         for (String player : players) {
             JSONObject jsonObject = new JSONObject();
-            if (WebSocketUtil.webSocketSet.containsKey(player)){
-                jsonObject.put("id", player);
-                jsonObject.put("username", WebSocketUtil.webSocketSet.get(player).getUsername());
-            }
+            jsonObject.put("id", player);
+            jsonObject.put("username", playRoom.getIdToName().get(player));
             jsonObjects.add(jsonObject);
         }
         textMsg.put("playerList", jsonObjects);
@@ -45,9 +43,15 @@ public class JSONUtil {
     public static JSONObject buildReConnectJSONObject(PlayRoom playRoom) {
         Map<String, String> gameMessage = playRoom.getGameMessage();
         JSONObject jsonObject = new JSONObject();
+        List<JSONObject> playerList = new ArrayList<>();
         for (String playerId : playRoom.getPlayers()) {
-            jsonObject.put(playerId, gameMessage.get(playerId));
+            JSONObject object = new JSONObject();
+            object.put("id", playerId);
+            object.put("username", playRoom.getIdToName().get(playerId));
+            object.put("gameMsg", gameMessage.get(playerId));
+            playerList.add(object);
         }
+        jsonObject.put("playerList", playerList);
         jsonObject.put("failList", playRoom.getFailList());
         jsonObject.put("type", 3);
         return jsonObject;

@@ -4,6 +4,7 @@ import com.ecnu.websocketDemo.Utils.GameTask;
 import com.ecnu.websocketDemo.Utils.JSONUtil;
 import com.ecnu.websocketDemo.Utils.WebSocketUtil;
 import com.ecnu.websocketDemo.controller.WebSocketConnect;
+import com.sun.crypto.provider.PBEWithMD5AndDESCipher;
 
 import java.util.*;
 
@@ -20,16 +21,26 @@ public class PlayRoom {
     //存储游戏结束的玩家 id，用于当所有玩家结束时使游戏提前结束
     private List<String> failList = new ArrayList<>();
 
+    private Map<String, String> idToName = new HashMap<>();
+
+
     //初始化游戏房间
     public PlayRoom(List<String> players, Integer difficulty) {
         this.players = players;
         this.difficulty = difficulty;
         this.startTime = System.currentTimeMillis();
         this.prId = "PR" + UUID.randomUUID().toString().substring(0, 5);
+        for (String player : players) {
+            idToName.put(player, WebSocketUtil.webSocketSet.get(player).getUsername());
+        }
 
         //新建房间时表示游戏开始，加上计时器
         Timer timer= new Timer();
         timer.schedule(new GameTask(this), 300000);
+    }
+
+    public Map<String, String> getIdToName() {
+        return idToName;
     }
 
     public List<String> getFailList() {
