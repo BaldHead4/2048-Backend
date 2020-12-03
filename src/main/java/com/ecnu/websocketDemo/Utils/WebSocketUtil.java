@@ -4,7 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ecnu.websocketDemo.controller.WebSocketConnect;
 import com.ecnu.websocketDemo.entity.PlayRoom;
+import lombok.Synchronized;
+import org.springframework.web.socket.TextMessage;
 
+import javax.websocket.Session;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +34,14 @@ public class WebSocketUtil {
      * 将消息发送给相应房间的成员
      * @param message
      */
-    public static void playRoomGroupSending(String message, PlayRoom playRoom){
+    public static  void playRoomGroupSending(String message, PlayRoom playRoom){
         for (String id : playRoom.getPlayers()){
             try {
                 if (webSocketSet.get(id)!=null) {
-                    webSocketSet.get(id).getSession().getBasicRemote().sendText(message);
+                    Session session = webSocketSet.get(id).getSession();
+                    synchronized (session) {
+                        session.getBasicRemote().sendText(message);
+                    }
                 }
             }catch (Exception e){
                 e.printStackTrace();
@@ -98,9 +104,9 @@ public class WebSocketUtil {
                         AppointSending(id, JSONUtil.buildErrorJSONObject( "房间已满，请重新匹配或重新选择难度").toJSONString());
                     } else {
                         easyList.add(id);
-                        if (easyList.size() == MAX_PLAYER) {
-                            PlayRoom playRoom = new PlayRoom(new ArrayList<>(easyList), difficulty);
-                            playRoomList.add(playRoom);
+                        if (easyList.size() == MAX_PLAYER) { // 当前游戏队列已满
+                            PlayRoom playRoom = new PlayRoom(new ArrayList<>(easyList), difficulty); //将队列中的玩家封装入新的 PlayRoom 对象
+                            playRoomList.add(playRoom); //将新的房间对象加入游戏房间队列中，支持多房间游戏
                             for (String player : easyList) {
                                 if(webSocketSet.containsKey(player)) {
                                     webSocketSet.get(player).setPlayRoom(playRoom);
@@ -116,7 +122,7 @@ public class WebSocketUtil {
                         AppointSending(id, JSONUtil.buildErrorJSONObject( "房间已满，请重新匹配或重新选择难度").toJSONString());
                     } else {
                         hardList.add(id);
-                        if (hardList.size() == MAX_PLAYER) {
+                        if (hardList.size() == MAX_PLAYER) { // 当前游戏队列已满
                             PlayRoom playRoom = new PlayRoom(new ArrayList<>(hardList), difficulty);
                             playRoomList.add(playRoom);
                             for (String player : hardList) {
@@ -135,7 +141,7 @@ public class WebSocketUtil {
 
     }
 
-    /*该重连方法将游戏房间对局信息发送给该 player
+    /*该重连方法将游戏房间对局信息发送给断线重连的玩家
     * 保存的对局信息的格式为 JSONString 字符串
     * */
     private static void reconnect(String id, PlayRoom playRoom) {

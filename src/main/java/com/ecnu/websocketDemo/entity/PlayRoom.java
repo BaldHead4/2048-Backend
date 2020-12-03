@@ -36,7 +36,7 @@ public class PlayRoom {
 
         //新建房间时表示游戏开始，加上计时器
         Timer timer= new Timer();
-        timer.schedule(new GameTask(this), 300000);
+        timer.schedule(new GameTask(this), 300000); // 5 分钟游戏时间
     }
 
     public Map<String, String> getIdToName() {

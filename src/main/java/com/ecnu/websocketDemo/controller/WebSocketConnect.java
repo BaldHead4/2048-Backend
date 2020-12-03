@@ -6,11 +6,7 @@ import com.ecnu.websocketDemo.Utils.JSONUtil;
 import com.ecnu.websocketDemo.Utils.WebSocketUtil;
 import com.ecnu.websocketDemo.entity.PlayRoom;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
-import sun.misc.ThreadGroupUtils;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -26,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @ServerEndpoint 这个注解有什么作用？
  *
- * 这个注解用于标识作用在类上，它的主要功能是把当前类标识成一个WebSocket的服务端
- * 注解的值用户客户端连接访问的URL地址
+ * 这个注解作用在类上，它的主要功能是把当前类标识成一个WebSocket的服务端
+ * 注解的 value 为用户客户端连接访问的URL地址
  *
  */
 
@@ -85,8 +81,6 @@ public class WebSocketConnect {
 
         log.info("[WebSocket] 连接成功，当前连接人数为：={}",WebSocketUtil.webSocketSet.size());
         log.info("当前在线成员有：" + WebSocketUtil.webSocketSet.toString());
-
-
     }
 
 
@@ -118,6 +112,7 @@ public class WebSocketConnect {
 
         JSONObject obj = JSON.parseObject(message);
         Integer method = (Integer) obj.get("method");
+        String id = (String) obj.get("id");
 
         switch (method){
             case 0:
@@ -126,7 +121,7 @@ public class WebSocketConnect {
             case 1:
                 if (this.playRoom != null) {
                     /*将该 player 对局信息存储到相应 playroom 中*/
-                    this.playRoom.getGameMessage().put(this.id, message);
+                    this.playRoom.getGameMessage().put(id, message);
                     /*广播该 player 对局信息*/
                     obj.put("type", 1);
                     WebSocketUtil.playRoomGroupSending((JSON.toJSONString(obj)), this.playRoom);
